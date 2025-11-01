@@ -26,12 +26,12 @@ const ROUTE_MAP = {
 
 // Reusable geometries (created once)
 const sharedGeometries = {
-  icosahedron: new THREE.IcosahedronGeometry(1, 2),
-  icosahedronLow: new THREE.IcosahedronGeometry(1, 1),
-  torus: new THREE.TorusGeometry(1.3, 0.015, 16, 100),
-  torusHover: new THREE.TorusGeometry(1.6, 0.025, 16, 100),
-  torusHover2: new THREE.TorusGeometry(1.8, 0.02, 16, 100),
-  sphere: new THREE.SphereGeometry(0.08),
+  icosahedron: new THREE.IcosahedronGeometry(1, 4), // Increased subdivision from 2 to 4 for smoother sphere
+  icosahedronLow: new THREE.IcosahedronGeometry(1, 2), // Increased from 1 to 2
+  torus: new THREE.TorusGeometry(1.3, 0.015, 32, 128), // Increased segments for smoother rings
+  torusHover: new THREE.TorusGeometry(1.6, 0.025, 32, 128),
+  torusHover2: new THREE.TorusGeometry(1.8, 0.02, 32, 128),
+  sphere: new THREE.SphereGeometry(0.08, 16, 16), // Added segments for smoother particles
   plane: (width, height) => new THREE.PlaneGeometry(width, height)
 }
 
@@ -183,17 +183,18 @@ function SubjectSphere({ position, color, name, fullName, icon }) {
           attach="material"
           distort={SPHERE_CONFIG.distortAmount}
           speed={SPHERE_CONFIG.distortSpeed}
-          roughness={0.05}
-          metalness={0.95}
+          roughness={0.02}
+          metalness={0.98}
           emissive={color}
           emissiveIntensity={hovered ? SPHERE_CONFIG.emissive.hovered : SPHERE_CONFIG.emissive.normal}
           clearcoat={1.0}
-          clearcoatRoughness={0.05}
-          envMapIntensity={1.5}
+          clearcoatRoughness={0.02}
+          envMapIntensity={2.0}
           reflectivity={1}
-          transmission={0.1}
-          thickness={0.5}
-          ior={2.4}
+          transmission={0.15}
+          thickness={0.8}
+          ior={2.5}
+          toneMapped={false}
         />
       </mesh>
 
@@ -299,23 +300,6 @@ function SubjectSphere({ position, color, name, fullName, icon }) {
           geometry={sharedGeometries.torusHover2}
           material={materials.hoverRing2}
         />
-
-        {/* Orbiting particles */}
-        <group>
-          {[
-            [2.2, 0, 0],
-            [-2.2, 0, 0],
-            [0, 2.2, 0],
-            [0, -2.2, 0]
-          ].map((pos, index) => (
-            <mesh 
-              key={index}
-              position={pos}
-              geometry={sharedGeometries.sphere}
-              material={materials.particle}
-            />
-          ))}
-        </group>
       </group>
     </group>
   )

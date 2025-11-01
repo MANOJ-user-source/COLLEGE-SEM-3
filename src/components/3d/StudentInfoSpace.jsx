@@ -55,7 +55,7 @@ function StudentInfoSpace({ isVisible, onBack }) {
 
       // Dramatic camera sweep - starts from far back and above, sweeps down
       const startPos = new THREE.Vector3(-15, 20, 30)
-      const endPos = new THREE.Vector3(0, 3, 18)
+      const endPos = new THREE.Vector3(0, 2, 22)
 
       camera.position.lerpVectors(startPos, endPos, eased)
       camera.lookAt(0, 0, 0)
@@ -80,8 +80,8 @@ function StudentInfoSpace({ isVisible, onBack }) {
       // Camera gently moves back to give full view
       const progress = Math.min(timeRef.current / 1.5, 1)
       const eased = easeOutCubic(progress)
-      camera.position.z = THREE.MathUtils.lerp(18, 20, eased)
-      camera.position.y = THREE.MathUtils.lerp(3, 1, eased)
+      camera.position.z = THREE.MathUtils.lerp(22, 25, eased)
+      camera.position.y = THREE.MathUtils.lerp(2, 1, eased)
       camera.lookAt(0, 0, 0)
 
       // Transition to interactive phase
@@ -111,18 +111,18 @@ function StudentInfoSpace({ isVisible, onBack }) {
       <Stars
         radius={200}
         depth={80}
-        count={20000}
-        factor={7}
-        saturation={0.9}
+        count={5000}
+        factor={5}
+        saturation={0.7}
         fade
-        speed={0.4}
+        speed={0.3}
       />
 
       {/* Cosmic particle field */}
-      <ParticleField count={1500} />
+      <ParticleField count={400} />
 
       {/* Nebula clouds */}
-      <CosmicDust count={200} />
+      <CosmicDust count={80} />
 
       {/* Single information card */}
       <InfoCard3D
@@ -132,14 +132,14 @@ function StudentInfoSpace({ isVisible, onBack }) {
       />
 
       {/* Dramatic lighting */}
-      <pointLight position={[0, 8, 3]} intensity={3} color="#fbbf24" distance={15} />
-      <pointLight position={[-10, 0, 5]} intensity={2} color="#8b5cf6" distance={20} />
-      <pointLight position={[10, 0, 5]} intensity={2} color="#3b82f6" distance={20} />
+      <pointLight position={[0, 8, 3]} intensity={1.5} color="#fbbf24" distance={15} />
+      <pointLight position={[-10, 0, 5]} intensity={1} color="#8b5cf6" distance={20} />
+      <pointLight position={[10, 0, 5]} intensity={1} color="#3b82f6" distance={20} />
       <spotLight
         position={[0, 15, 10]}
         angle={0.5}
         penumbra={1}
-        intensity={2}
+        intensity={1}
         color="#ffffff"
         castShadow
       />
@@ -186,9 +186,9 @@ function StudentInfoSpace({ isVisible, onBack }) {
       )}
 
       {/* Ambient environment light */}
-      <ambientLight intensity={0.3} />
+      <ambientLight intensity={0.15} />
       {/* eslint-disable-next-line react/no-unknown-property */}
-      <hemisphereLight intensity={0.5} color="#ffffff" groundColor="#1a0a3a" />
+      <hemisphereLight intensity={0.3} color="#ffffff" groundColor="#1a0a3a" />
     </group>
   )
 }

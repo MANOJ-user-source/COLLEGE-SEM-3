@@ -1,6 +1,7 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, Stars } from '@react-three/drei'
 import { useRef, useState } from 'react'
+import * as THREE from 'three'
 import OrbitingPlanet from './OrbitingPlanet'
 import CentralSun from './CentralSun'
 import ParticleField from './ParticleField'
@@ -97,7 +98,7 @@ const solarSystemPlanets = [
       color: '#8b5cf6',
       icon: '💡'
     },
-    orbitRadius: 5,
+    orbitRadius: 6,
     orbitSpeed: 0.8,
     initialAngle: 0
   },
@@ -108,7 +109,7 @@ const solarSystemPlanets = [
       color: '#f472b6',
       icon: '🧩'
     },
-    orbitRadius: 7,
+    orbitRadius: 9,
     orbitSpeed: 0.6,
     initialAngle: Math.PI / 3
   },
@@ -120,7 +121,7 @@ const solarSystemPlanets = [
       color: '#60a5fa',
       icon: '⚙️'
     },
-    orbitRadius: 9,
+    orbitRadius: 12,
     orbitSpeed: 0.45,
     initialAngle: Math.PI
   },
@@ -131,7 +132,7 @@ const solarSystemPlanets = [
       color: '#34d399',
       icon: '🌐'
     },
-    orbitRadius: 11,
+    orbitRadius: 15,
     orbitSpeed: 0.35,
     initialAngle: Math.PI / 2
   },
@@ -143,7 +144,7 @@ const solarSystemPlanets = [
       color: '#3b82f6',
       icon: '💻'
     },
-    orbitRadius: 13,
+    orbitRadius: 18,
     orbitSpeed: 0.25,
     initialAngle: Math.PI * 1.5
   },
@@ -154,7 +155,7 @@ const solarSystemPlanets = [
       color: '#fbbf24',
       icon: '📐'
     },
-    orbitRadius: 15,
+    orbitRadius: 21,
     orbitSpeed: 0.18,
     initialAngle: Math.PI / 4
   },
@@ -165,16 +166,47 @@ const solarSystemPlanets = [
       color: '#fb923c',
       icon: '🔀'
     },
-    orbitRadius: 17,
+    orbitRadius: 24,
     orbitSpeed: 0.12,
     initialAngle: Math.PI * 1.2
   },
 ]
 
+// Camera reset component for returning to solar system
+function CameraReset({ onComplete }) {
+  const { camera } = useThree()
+  const [isResetting, setIsResetting] = useState(true)
+  const progressRef = useRef(0)
+
+  useFrame((state, delta) => {
+    if (!isResetting) return
+
+    progressRef.current += delta / 1.5 // 1.5 second reset
+    const progress = Math.min(progressRef.current, 1)
+
+    // Smooth easing
+    const eased = -(Math.cos(Math.PI * progress) - 1) / 2
+
+    // Reset to default solar system view
+    const targetPos = new THREE.Vector3(0, 8, 25)
+    camera.position.lerp(targetPos, eased)
+    camera.lookAt(0, 0, 0)
+    camera.rotation.z = 0
+
+    if (progress >= 1) {
+      setIsResetting(false)
+      onComplete()
+    }
+  })
+
+  return null
+}
+
 function Scene3D() {
   const [hasPlayedAnimation, setHasPlayedAnimation] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [showStudentSpace, setShowStudentSpace] = useState(false)
+  const [isReturningToSolarSystem, setIsReturningToSolarSystem] = useState(false)
 
   // Animation plays on every refresh - no session storage check
 
@@ -196,6 +228,11 @@ function Scene3D() {
 
   const handleBackToSolarSystem = () => {
     setShowStudentSpace(false)
+    setIsReturningToSolarSystem(true)
+  }
+
+  const handleCameraResetComplete = () => {
+    setIsReturningToSolarSystem(false)
   }
 
   return (
@@ -206,28 +243,28 @@ function Scene3D() {
           className="bg-gradient-to-br from-black via-purple-950 to-black"
         >
         {/* Solar system lighting - warm sun-centric theme */}
-        <ambientLight intensity={0.3} />
+        <ambientLight intensity={0.15} />
 
         {/* Main sun illumination is handled by CentralSun component */}
 
         {/* Distant starlight - cooler tones */}
-        <pointLight position={[30, 20, 20]} intensity={0.5} color="#b8c5ff" />
-        <pointLight position={[-30, -20, -20]} intensity={0.4} color="#ffc8b8" />
+        <pointLight position={[30, 20, 20]} intensity={0.3} color="#b8c5ff" />
+        <pointLight position={[-30, -20, -20]} intensity={0.25} color="#ffc8b8" />
 
         {/* Nebula glow from distance */}
-        <pointLight position={[0, 30, -30]} intensity={0.6} color="#c77dff" />
-        <pointLight position={[0, -30, 30]} intensity={0.5} color="#60a5fa" />
+        <pointLight position={[0, 30, -30]} intensity={0.35} color="#c77dff" />
+        <pointLight position={[0, -30, 30]} intensity={0.3} color="#60a5fa" />
 
         {/* Rim lighting for outer planets */}
-        <pointLight position={[25, 0, 0]} intensity={0.4} color="#34d399" />
-        <pointLight position={[-25, 0, 0]} intensity={0.4} color="#fbbf24" />
+        <pointLight position={[25, 0, 0]} intensity={0.25} color="#34d399" />
+        <pointLight position={[-25, 0, 0]} intensity={0.25} color="#fbbf24" />
 
         {/* Top-down illumination */}
         <spotLight
           position={[0, 40, 0]}
           angle={0.8}
           penumbra={1}
-          intensity={0.8}
+          intensity={0.5}
           color="#d4d4ff"
           castShadow
         />
@@ -238,22 +275,22 @@ function Scene3D() {
         {/* Aurora glow atmosphere */}
         {!showStudentSpace && <AuroraGlow />}
 
-        {/* Distant stars - deeper and more numerous */}
+        {/* Distant stars - reduced for cleaner look */}
         {!showStudentSpace && <Stars
           radius={200}
           depth={80}
-          count={20000}
-          factor={7}
-          saturation={0.9}
+          count={5000}
+          factor={5}
+          saturation={0.7}
           fade
-          speed={0.4}
+          speed={0.3}
         />}
 
-        {/* Cosmic particle field for depth */}
-        {!showStudentSpace && <ParticleField count={1500} />}
+        {/* Cosmic particle field for depth - reduced */}
+        {!showStudentSpace && <ParticleField count={400} />}
 
-        {/* Nebula clouds in the background */}
-        {!showStudentSpace && <CosmicDust count={200} />}
+        {/* Nebula clouds in the background - reduced */}
+        {!showStudentSpace && <CosmicDust count={80} />}
 
         {/* Central Sun - Clickable to show student info */}
         {!showStudentSpace && <CentralSun onClick={handleSunClick} />}
@@ -281,10 +318,21 @@ function Scene3D() {
         {/* Student Info Space - New dimension */}
         <StudentInfoSpace isVisible={showStudentSpace} onBack={handleBackToSolarSystem} />
 
+        {/* Camera reset when returning to solar system */}
+        {isReturningToSolarSystem && <CameraReset onComplete={handleCameraResetComplete} />}
+
         {/* Camera controls - animated on first load, normal afterwards */}
         {!hasPlayedAnimation ? (
           <CameraAnimation onComplete={handleAnimationComplete} />
-        ) : (
+        ) : showStudentSpace ? (
+          <OrbitControls
+            enableZoom={true}
+            enablePan={true}
+            minDistance={15}
+            maxDistance={35}
+            target={[0, 0, 0]}
+          />
+        ) : !isReturningToSolarSystem ? (
           <OrbitControls
             enableZoom={true}
             enablePan={true}
@@ -293,7 +341,7 @@ function Scene3D() {
             autoRotate
             autoRotateSpeed={0.3}
           />
-        )}
+        ) : null}
       </Canvas>
     </div>
   </>
