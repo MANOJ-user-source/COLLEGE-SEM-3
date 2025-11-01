@@ -16,7 +16,7 @@ import WDPProject6 from './pages/wdp/WDPProject6'
 
 function App() {
   return (
-    <Router>
+    <Router basename="/COLLEGE-SEM-3">
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/oop" element={<OOP />} />
