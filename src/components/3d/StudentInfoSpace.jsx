@@ -118,11 +118,11 @@ function StudentInfoSpace({ isVisible, onBack }) {
         speed={0.3}
       />
 
-      {/* Cosmic particle field */}
-      <ParticleField count={400} />
+      {/* Cosmic particle field - reduced for better performance */}
+      <ParticleField count={200} />
 
-      {/* Nebula clouds */}
-      <CosmicDust count={80} />
+      {/* Nebula clouds - reduced */}
+      <CosmicDust count={40} />
 
       {/* Single information card */}
       <InfoCard3D

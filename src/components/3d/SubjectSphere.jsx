@@ -142,19 +142,23 @@ function SubjectSphere({ position, color, name, fullName, icon }) {
     }
   })
 
-  // Optimized click handler
-  const handleClick = useCallback(async () => {
+  // Optimized click handler with better touch support
+  const handleClick = useCallback(async (e) => {
+    e.stopPropagation()
     if (isNavigating) return
-    
+
     const route = ROUTE_MAP[name]
     if (!route) return
 
     setIsNavigating(true)
-    
+
+    // Visual feedback
+    setHovered(true)
+
     // Add a small delay for visual feedback
     await new Promise(resolve => setTimeout(resolve, 300))
     navigate(route)
-    
+
     setIsNavigating(false)
   }, [name, navigate, isNavigating])
 
@@ -170,12 +174,21 @@ function SubjectSphere({ position, color, name, fullName, icon }) {
 
   return (
     <group ref={groupRef} position={position}>
-      {/* Main sphere */}
+      {/* Invisible larger hitbox for easier touch/click - Mobile friendly */}
       <mesh
-        ref={meshRef}
+        scale={2.5}
         onClick={handleClick}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
+        visible={false}
+      >
+        <sphereGeometry args={[1, 8, 8]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+
+      {/* Main sphere */}
+      <mesh
+        ref={meshRef}
         geometry={sharedGeometries.icosahedron}
       >
         <MeshDistortMaterial

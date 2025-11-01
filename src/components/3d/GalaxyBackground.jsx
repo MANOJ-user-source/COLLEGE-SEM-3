@@ -7,8 +7,8 @@ function GalaxyBackground() {
 
   // Create milky way nebula effect using shaders
   const [geometry, material] = useMemo(() => {
-    // Use IcosahedronGeometry with maximum detail for perfectly smooth surface
-    const geometry = new THREE.IcosahedronGeometry(100, 30)
+    // Optimized geometry for better performance while keeping quality
+    const geometry = new THREE.IcosahedronGeometry(100, 20)
 
     // Custom shader for milky way effect
     const material = new THREE.ShaderMaterial({
@@ -60,11 +60,11 @@ function GalaxyBackground() {
           );
         }
 
-        // 3D Fractal Brownian Motion for organic clouds
+        // Optimized FBM - balanced quality and performance
         float fbm(vec3 st) {
           float value = 0.0;
           float amplitude = 0.5;
-          for(int i = 0; i < 8; i++) {
+          for(int i = 0; i < 5; i++) {
             value += amplitude * noise(st);
             st *= 2.1;
             amplitude *= 0.5;
@@ -72,11 +72,11 @@ function GalaxyBackground() {
           return value;
         }
 
-        // 3D Turbulence for more chaotic nebula patterns
+        // Optimized turbulence - fewer iterations
         float turbulence(vec3 st) {
           float value = 0.0;
           float amplitude = 1.0;
-          for(int i = 0; i < 6; i++) {
+          for(int i = 0; i < 4; i++) {
             value += amplitude * abs(noise(st) - 0.5);
             st *= 2.0;
             amplitude *= 0.5;

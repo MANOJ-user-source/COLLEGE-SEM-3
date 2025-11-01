@@ -18,7 +18,7 @@ function CameraAnimation({ onComplete }) {
   const controlsRef = useRef()
   const [isAnimating, setIsAnimating] = useState(true)
   const [animationProgress, setAnimationProgress] = useState(0)
-  const rotationDuration = 14 // Extended for smoother experience
+  const rotationDuration = 5 // Optimized for faster load
 
   // Smooth easing functions
   const easeInOutQuart = (t) => {
@@ -286,11 +286,11 @@ function Scene3D() {
           speed={0.3}
         />}
 
-        {/* Cosmic particle field for depth - reduced */}
-        {!showStudentSpace && <ParticleField count={400} />}
+        {/* Cosmic particle field for depth - optimized */}
+        {!showStudentSpace && <ParticleField count={300} />}
 
-        {/* Nebula clouds in the background - reduced */}
-        {!showStudentSpace && <CosmicDust count={80} />}
+        {/* Nebula clouds in the background - optimized */}
+        {!showStudentSpace && <CosmicDust count={60} />}
 
         {/* Central Sun - Clickable to show student info */}
         {!showStudentSpace && <CentralSun onClick={handleSunClick} />}
