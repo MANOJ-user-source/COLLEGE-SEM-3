@@ -1,122 +1,302 @@
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Stars, Float } from '@react-three/drei'
-import SubjectSphere from './SubjectSphere'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { OrbitControls, Stars } from '@react-three/drei'
+import { useRef, useState } from 'react'
+import OrbitingPlanet from './OrbitingPlanet'
+import CentralSun from './CentralSun'
 import ParticleField from './ParticleField'
+import GalaxyBackground from './GalaxyBackground'
+import CosmicDust from './CosmicDust'
+import AuroraGlow from './AuroraGlow'
+import CinematicTransition from './CinematicTransition'
+import StudentInfoSpace from './StudentInfoSpace'
+import HyperSpaceJump from './HyperSpaceJump'
 
-const subjects = [
+// Cinematic Camera Animation - smooth, flowing tour of the solar system
+function CameraAnimation({ onComplete }) {
+  const { camera } = useThree()
+  const controlsRef = useRef()
+  const [isAnimating, setIsAnimating] = useState(true)
+  const [animationProgress, setAnimationProgress] = useState(0)
+  const rotationDuration = 14 // Extended for smoother experience
+
+  // Smooth easing functions
+  const easeInOutQuart = (t) => {
+    return t < 0.5
+      ? 8 * t * t * t * t
+      : 1 - Math.pow(-2 * t + 2, 4) / 2
+  }
+
+  const easeInOutSine = (t) => {
+    return -(Math.cos(Math.PI * t) - 1) / 2
+  }
+
+  useFrame((state, delta) => {
+    if (isAnimating && animationProgress < 1) {
+      // Update progress based on time
+      const newProgress = Math.min(animationProgress + delta / rotationDuration, 1)
+      setAnimationProgress(newProgress)
+
+      // Apply global smooth easing for entire animation
+      const smoothProgress = easeInOutSine(newProgress)
+
+      // Calculate continuous smooth values using sine/cosine waves
+      // Complete rotation around the system
+      const totalRotation = smoothProgress * Math.PI * 2.5 // 450 degrees total
+
+      // Smooth vertical movement - goes below, rises, goes above, settles
+      const heightWave = Math.sin(smoothProgress * Math.PI * 2) // Creates wave pattern
+      const heightOffset = Math.cos(smoothProgress * Math.PI * 1.5) // Additional variation
+      const height = 5 + (heightWave * 8) + (heightOffset * 4) // Ranges from ~-7 to ~17
+
+      // Smooth distance variation - starts far, comes closer, backs out slightly
+      const distanceCurve = easeInOutQuart(smoothProgress)
+      const distanceWave = Math.sin(smoothProgress * Math.PI * 1.5) * 2
+      const distance = 40 - (distanceCurve * 12) + distanceWave // Ranges from ~26 to ~40
+
+      // Calculate camera position with spherical coordinates
+      const x = Math.sin(totalRotation) * distance
+      const z = Math.cos(totalRotation) * distance
+
+      // Smooth camera movement with interpolation
+      camera.position.x = x
+      camera.position.y = height
+      camera.position.z = z
+
+      // Always look at the sun (center of solar system)
+      camera.lookAt(0, 0, 0)
+
+      // When animation completes
+      if (newProgress >= 1) {
+        setIsAnimating(false)
+        onComplete()
+      }
+    }
+  })
+
+  return (
+    <OrbitControls
+      ref={controlsRef}
+      enabled={!isAnimating}
+      enableZoom={true}
+      enablePan={true}
+      minDistance={8}
+      maxDistance={45}
+      autoRotate={!isAnimating}
+      autoRotateSpeed={0.3}
+    />
+  )
+}
+
+// Solar system configuration - planets orbiting at different radii and speeds
+const solarSystemPlanets = [
+  // Inner planets (faster orbits, closer to sun)
   {
-    name: 'OS',
-    fullName: 'Operating Systems',
-    position: [-4, 2, 0],
-    color: '#60a5fa',
-    icon: '⚙️'
+    subject: {
+      name: 'DTI',
+      fullName: 'Design Thinking & Innovation',
+      color: '#8b5cf6',
+      icon: '💡'
+    },
+    orbitRadius: 5,
+    orbitSpeed: 0.8,
+    initialAngle: 0
   },
   {
-    name: 'OOP',
-    fullName: 'Object-Oriented Programming',
-    position: [4, 2, 0],
-    color: '#f472b6',
-    icon: '🧩'
+    subject: {
+      name: 'OOP',
+      fullName: 'Object-Oriented Programming',
+      color: '#f472b6',
+      icon: '🧩'
+    },
+    orbitRadius: 7,
+    orbitSpeed: 0.6,
+    initialAngle: Math.PI / 3
+  },
+  // Middle planets
+  {
+    subject: {
+      name: 'OS',
+      fullName: 'Operating Systems',
+      color: '#60a5fa',
+      icon: '⚙️'
+    },
+    orbitRadius: 9,
+    orbitSpeed: 0.45,
+    initialAngle: Math.PI
   },
   {
-    name: 'CN',
-    fullName: 'Computer Networks',
-    position: [0, 3, -3],
-    color: '#34d399',
-    icon: '🌐'
+    subject: {
+      name: 'CN',
+      fullName: 'Computer Networks',
+      color: '#34d399',
+      icon: '🌐'
+    },
+    orbitRadius: 11,
+    orbitSpeed: 0.35,
+    initialAngle: Math.PI / 2
+  },
+  // Outer planets (slower orbits, further from sun)
+  {
+    subject: {
+      name: 'WDP',
+      fullName: 'Web Development Project',
+      color: '#3b82f6',
+      icon: '💻'
+    },
+    orbitRadius: 13,
+    orbitSpeed: 0.25,
+    initialAngle: Math.PI * 1.5
   },
   {
-    name: 'MATHS AI',
-    fullName: 'Mathematics for AI',
-    position: [-3, -2, -2],
-    color: '#fbbf24',
-    icon: '📐'
+    subject: {
+      name: 'MATHS AI',
+      fullName: 'Mathematics for AI',
+      color: '#fbbf24',
+      icon: '📐'
+    },
+    orbitRadius: 15,
+    orbitSpeed: 0.18,
+    initialAngle: Math.PI / 4
   },
   {
-    name: 'WDP',
-    fullName: 'Web Design & Programming',
-    position: [3, -2, -2],
-    color: '#a78bfa',
-    icon: '💻'
-  },
-  {
-    name: 'VC',
-    fullName: 'Version Control',
-    position: [0, -3, 0],
-    color: '#fb923c',
-    icon: '🔀'
-  },
-  {
-    name: 'DTI',
-    fullName: 'Digital Transformation',
-    position: [0, 0, 2],
-    color: '#ec4899',
-    icon: '🚀'
+    subject: {
+      name: 'VC',
+      fullName: 'Version Control',
+      color: '#fb923c',
+      icon: '🔀'
+    },
+    orbitRadius: 17,
+    orbitSpeed: 0.12,
+    initialAngle: Math.PI * 1.2
   },
 ]
 
 function Scene3D() {
+  const [hasPlayedAnimation, setHasPlayedAnimation] = useState(false)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [showStudentSpace, setShowStudentSpace] = useState(false)
+
+  // Animation plays on every refresh - no session storage check
+
+  const handleAnimationComplete = () => {
+    // Animation completed, enable user controls
+    setHasPlayedAnimation(true)
+  }
+
+  const handleSunClick = (e) => {
+    e.stopPropagation()
+    // Start cinematic transition
+    setIsTransitioning(true)
+  }
+
+  const handleTransitionComplete = () => {
+    setIsTransitioning(false)
+    setShowStudentSpace(true)
+  }
+
+  const handleBackToSolarSystem = () => {
+    setShowStudentSpace(false)
+  }
+
   return (
-    <div className="w-full h-screen">
-      <Canvas
-        camera={{ position: [0, 0, 12], fov: 60 }}
-        className="bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950"
-      >
-        {/* Lighting */}
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} intensity={1} />
-        <pointLight position={[-10, -10, -10]} intensity={0.5} color="#60a5fa" />
+    <>
+      <div className="w-full h-screen">
+        <Canvas
+          camera={{ position: [0, 8, 25], fov: 70 }}
+          className="bg-gradient-to-br from-black via-purple-950 to-black"
+        >
+        {/* Solar system lighting - warm sun-centric theme */}
+        <ambientLight intensity={0.3} />
+
+        {/* Main sun illumination is handled by CentralSun component */}
+
+        {/* Distant starlight - cooler tones */}
+        <pointLight position={[30, 20, 20]} intensity={0.5} color="#b8c5ff" />
+        <pointLight position={[-30, -20, -20]} intensity={0.4} color="#ffc8b8" />
+
+        {/* Nebula glow from distance */}
+        <pointLight position={[0, 30, -30]} intensity={0.6} color="#c77dff" />
+        <pointLight position={[0, -30, 30]} intensity={0.5} color="#60a5fa" />
+
+        {/* Rim lighting for outer planets */}
+        <pointLight position={[25, 0, 0]} intensity={0.4} color="#34d399" />
+        <pointLight position={[-25, 0, 0]} intensity={0.4} color="#fbbf24" />
+
+        {/* Top-down illumination */}
         <spotLight
-          position={[0, 10, 0]}
-          angle={0.3}
+          position={[0, 40, 0]}
+          angle={0.8}
           penumbra={1}
-          intensity={1}
+          intensity={0.8}
+          color="#d4d4ff"
           castShadow
         />
 
-        {/* Stars background */}
-        <Stars
-          radius={100}
-          depth={50}
-          count={5000}
-          factor={4}
-          saturation={0}
+        {/* Milky way galaxy background */}
+        {!showStudentSpace && <GalaxyBackground />}
+
+        {/* Aurora glow atmosphere */}
+        {!showStudentSpace && <AuroraGlow />}
+
+        {/* Distant stars - deeper and more numerous */}
+        {!showStudentSpace && <Stars
+          radius={200}
+          depth={80}
+          count={20000}
+          factor={7}
+          saturation={0.9}
           fade
-          speed={1}
-        />
+          speed={0.4}
+        />}
 
-        {/* Particle field */}
-        <ParticleField count={800} />
+        {/* Cosmic particle field for depth */}
+        {!showStudentSpace && <ParticleField count={1500} />}
 
-        {/* Subject spheres */}
-        {subjects.map((subject, index) => (
-          <Float
-            key={subject.name}
-            speed={2}
-            rotationIntensity={1}
-            floatIntensity={2}
-          >
-            <SubjectSphere
-              position={subject.position}
-              color={subject.color}
-              name={subject.name}
-              fullName={subject.fullName}
-              icon={subject.icon}
-            />
-          </Float>
+        {/* Nebula clouds in the background */}
+        {!showStudentSpace && <CosmicDust count={200} />}
+
+        {/* Central Sun - Clickable to show student info */}
+        {!showStudentSpace && <CentralSun onClick={handleSunClick} />}
+
+        {/* Orbiting Planet Spheres - Hide during transition */}
+        {!showStudentSpace && solarSystemPlanets.map((planet, index) => (
+          <OrbitingPlanet
+            key={planet.subject.name}
+            subject={planet.subject}
+            orbitRadius={planet.orbitRadius}
+            orbitSpeed={planet.orbitSpeed}
+            initialAngle={planet.initialAngle}
+          />
         ))}
 
-        {/* Camera controls */}
-        <OrbitControls
-          enableZoom={true}
-          enablePan={false}
-          minDistance={8}
-          maxDistance={20}
-          autoRotate
-          autoRotateSpeed={0.5}
+        {/* Hyperspace Jump Effect - Smooth cinematic star streaks */}
+        <HyperSpaceJump isActive={isTransitioning} />
+
+        {/* Cinematic Transition Animation */}
+        <CinematicTransition
+          isActive={isTransitioning}
+          onComplete={handleTransitionComplete}
         />
+
+        {/* Student Info Space - New dimension */}
+        <StudentInfoSpace isVisible={showStudentSpace} onBack={handleBackToSolarSystem} />
+
+        {/* Camera controls - animated on first load, normal afterwards */}
+        {!hasPlayedAnimation ? (
+          <CameraAnimation onComplete={handleAnimationComplete} />
+        ) : (
+          <OrbitControls
+            enableZoom={true}
+            enablePan={true}
+            minDistance={8}
+            maxDistance={45}
+            autoRotate
+            autoRotateSpeed={0.3}
+          />
+        )}
       </Canvas>
     </div>
+  </>
   )
 }
 
